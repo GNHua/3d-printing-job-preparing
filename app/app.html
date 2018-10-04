@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <title>Don't Lase Me, Bro Slicer 0.0.0.1</title>
+</head>
+<body>
+  <!-- <div id="app" class="container" style="display: none;"> -->
+    <div id="caption">Don't Lase Me, Bro Slicer 0.0.0.1</div>
+    <div class="section group">
+        <div class="col span_1_of_3">
+            <div id="controls">
+                <p><input accept=".stl" type="file" id="upload" size="50"/></p>
+                <p>mm per STL units: <input type="text" id="mm" value="1" size="5"></p>
+                <p>Layer height (μm): <input type="text" id="height" value="100"
+                                       size="3"/></p>
+                <p><input type="submit" id="slice" value="Slice" style="width:180px;"/></p>
+                <p id="status"></p>
+
+                <input type="hidden" id="filename" />
+
+                <div id="rotation">
+                    <p>Rotation:</p>
+                    <p><input type="submit" id="rot_reset" value="Reset"/></p>
+                    <div>
+                        <input type="submit" id="rot_x_plus" value="X+"/>
+                        <input type="submit" id="rot_x_minus" value="X-"/>
+                    </div>
+                    <div>
+                        <input type="submit" id="rot_y_plus" value="Y+"/>
+                        <input type="submit" id="rot_y_minus" value="Y-"/>
+                    </div>
+                    <div>
+                        <input type="submit" id="rot_z_plus" value="Z+"/>
+                        <input type="submit" id="rot_z_minus" value="Z-"/>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+        <div class="col span_2_of_3">
+                <canvas id="canvas" width="500" height="500">
+                    Your browser doesn't appear to support the
+                    <code>&lt;canvas&gt;</code> element.
+                </canvas><br>
+                <input type="range" style="width: 500px;" id="slider">
+        </div>
+    </div>
+  <!-- </div> -->
+    <script src="app.js"></script>
+</body>
+</html>
