@@ -1,82 +1,63 @@
 'use strict';
 
-let fs = require('filesaver.js');
-let JSZip = require('jszip');
+let fs = require('fs');
+let path = require('path');
+let _ = require('underscore');
+let s = require('underscore.string');
+_.mixin(s.exports());
 
 let viewport = require('./viewport.js');
 let printer = require('./printer.js');
 let ui = require('./ui.js');
+let png = require('./png/png.js');
 
-////////////////////////////////////////////////////////////////////////////////
-
-// Create a 2D canvas to store our rendered image
-let canvas = document.createElement('canvas');
-canvas.width = printer.resolution.x;
-canvas.height = printer.resolution.y;
-let context = canvas.getContext('2d');
-
-let zip = null;
-let slices = null;
+const fileInput = document.getElementById('upload');
 
 function next(i, n)
 {
-    if (i < n)
-    {
-        let data = viewport.getSliceAt(i / n);
-
-        // Copy the pixels to a 2D canvas
-        let image = context.createImageData(
-                printer.resolution.x, printer.resolution.y);
-        image.data.set(data);
-
-        // Load data into the context
-        context.putImageData(image, 0, 0);
-
-        // Convert data to a DataURL and save to the zip file
-        let png = canvas.toDataURL();
-        let index = i + "";
-        while (index.length < 4) index = "0" + index;
-        slices.file("out" + index + ".png",
-                    png.slice(png.indexOf(',') + 1, -1),
-                    {base64: true});
-
-        if (i == n - 1)
-        {
-            ui.setStatus("Saving .zip file...");
-        }
-        requestAnimationFrame(function() { next(i + 1, n); });
+  if (i <= n)
+  {
+    let glData = viewport.getSliceAt(i / n);
+    let grayscaleData = new Uint8Array(printer.pixels());
+    for(let j=0; j<printer.pixels(); j++) {
+      grayscaleData[j] = glData[4*j];
     }
-    else
-    {
-        let content = zip.generate({type: 'blob', compression: 'DEFLATE'});
-        let zipName = document.getElementById("filename").value
-        fs.saveAs(content, zipName);
-        ui.setStatus("");
-        ui.enableButtons();
+
+    let index = _.lpad(i.toString(), 6, '0');
+    let slicesPath = path.join(path.dirname(fileInput.files[0].path), 'slices');
+    if (!fs.existsSync(slicesPath)){
+      fs.mkdirSync(slicesPath);
     }
+    let fn = path.join(slicesPath, 'out' + index + '.png');
+    png.save(fn, grayscaleData, printer.resolution.x, printer.resolution.y);
+    requestAnimationFrame(function() { next(i + 1, n); });
+  }
+  else
+  {
+    ui.setStatus("");
+    ui.enableButtons();
+  }
 }
 
 // Assign callback to the "slices" button
 document.getElementById("slice").onclick = function(event)
 {
-    if (!viewport.hasModel())
-    {
-        ui.setStatus("No model loaded!");
-        return;
-    }
+  if (!viewport.hasModel())
+  {
+    ui.setStatus("No model loaded!");
+    return;
+  }
 
-    ui.disableButtons();
+  ui.disableButtons();
 
-    let microns = document.getElementById("height").value;
-    let bounds = viewport.getBounds();
+  let layerThicknessMicron = document.getElementById("height").value;
+  let bounds = viewport.getBounds();
 
-    // We map 3 inches to +/-1 on the X axis, so we use that ratio
-    // to convert to Z in inches
-    let zrange_mm = (bounds.zmax - bounds.zmin) / printer.getGLscale();
-    let count = Math.ceil(zrange_mm * 1000 / microns);
+  // We map 3 inches to +/-1 on the X axis, so we use that ratio
+  // to convert to Z in inches
+  let zrange_mm = (bounds.zmax - bounds.zmin) / printer.getGLscale();
+  let count = Math.floor((zrange_mm * 1000 + 0.01) / layerThicknessMicron);
 
-    zip = new JSZip();
-    ui.setStatus("Slicing...");
-    slices = zip.folder("slices");
-    next(0, count);
+  ui.setStatus("Slicing...");
+  next(1, count);
 }
