@@ -2,6 +2,20 @@
 
 An electron app that slices a STL file into 8-bit grayscale png images for Stereolithographic 3D printer
 
+## Usage
+
+Install dependencies:
+
+    $ npm install
+
+Run:
+
+    $ npm start
+
+Build an executable:
+
+    $ npm run release
+
 ## TODO
 
 1. Adjustable resolution and pixel pitch
